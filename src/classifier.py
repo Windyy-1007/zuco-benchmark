@@ -1,4 +1,5 @@
 from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier  # <-- add this import
 from sklearn.utils import shuffle
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import precision_recall_fscore_support
@@ -95,9 +96,11 @@ def benchmark(X, y, test_X, test_y):
     test_X = [scaling.transform(subj) for subj in test_X]
     
     print("\nTraining on all subjects in the train split ")
-    # train SVM classifier
-    clf = SVC(random_state=config.seed, kernel=config.kernel, \
-        gamma='scale', cache_size=1000)
+    # train KNN classifier instead of SVM
+    clf = KNeighborsClassifier(
+        n_neighbors=getattr(config, "knn_n_neighbors", 5),  # configurable, default 5
+        weights=getattr(config, "knn_weights", "uniform")
+    )
 
     clf.fit(train_X, train_y)
     train_acc = len([i for i, j in zip(clf.predict(train_X), train_y) if i == j]) / len(train_y)
@@ -160,9 +163,11 @@ def benchmark_baseline(X, y, test_X, test_y):
     test_X = [scaling.transform(subj) for subj in test_X]
     
     print("\nTraining on all subjects in the train split ")
-    # train SVM classifier
-    clf = SVC(random_state=config.seed, kernel=config.kernel, \
-        gamma='scale', cache_size=1000)
+    # train KNN classifier instead of SVM
+    clf = KNeighborsClassifier(
+        n_neighbors=getattr(config, "knn_n_neighbors", 5),
+        weights=getattr(config, "knn_weights", "uniform")
+    )
 
     clf.fit(train_X, train_y)
     train_acc = len([i for i, j in zip(clf.predict(train_X), train_y) if i == j]) / len(train_y)
@@ -172,4 +177,3 @@ def benchmark_baseline(X, y, test_X, test_y):
     results = [predict_subject_baseline(clf,test_X,index, subj)\
              for index, subj in enumerate(config.heldout_subjects)]
     return results
-        

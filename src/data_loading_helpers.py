@@ -77,7 +77,7 @@ def load_matlab_string(matlab_extracted_object):
     :return:
         extracted_string    (str)   translated string
     """
-    extracted_string = u''.join(chr(c) for c in matlab_extracted_object)
+    extracted_string = u''.join(chr(int(c)) for c in matlab_extracted_object)
     return extracted_string
 
 """
