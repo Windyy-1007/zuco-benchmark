@@ -7,14 +7,23 @@ pip install osfclient
 
 # Get the data from osf
 echo "Creating data dir"
-mkdir data
+mkdir -p data
 
 # Get the test-data from osf This may take a while
+# echo "Downloading test-data from osf, this may take a while"
+# osf -p d7frw clone
+# echo "Finished downloading test-data now cleaning"
+# mv d7frw/dropbox data/test
+# rm -r d7frw
+
+
 echo "Downloading test-data from osf, this may take a while"
-osf -p d7frw clone
-echo "Finished downloading test-data now cleaning"
-mv d7frw/dropbox data/test
-rm -r d7frw
+osf -p d7frw clone || echo "Warning: osfclient exited with error for d7frw"
+if [ -d "d7frw/dropbox" ]; then
+    mv d7frw/dropbox data/test
+else
+    echo "Warning: d7frw/dropbox not found!"
+fi
 
 echo "Downloading NR train-data from osf, this may take a while"
 osf -p 2abup clone
