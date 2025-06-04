@@ -2,8 +2,8 @@
 
 # Dataset Configuration
 dataset = "zuco2"
-rootdir = "c:\\Projects\\zuco-benchmark\\data\\train\\"
-heldout_dir = "c:\\Projects\\zuco-benchmark\\data\\test\\"
+rootdir = "..\\data\\train\\"
+heldout_dir = "..\\data\\test\\"
 heldout_subjects = ["XBB", "XDT", "XLS", "XPB", "XSE", "XTR", "XWS", "XAH", "XBD", "XSS"]
 subjects = ['YAC', 'YAG', 'YAK', 'YDG', 'YDR', 'YFR', 'YFS', 'YHS', 'YIS', 'YLS', 'YMD', 'YRK', 'YRP', 'YSD', 'YSL', 'YTL']  # exclude YMH,  - YRH, YMS
 

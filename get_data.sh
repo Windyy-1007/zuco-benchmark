@@ -16,17 +16,6 @@ mkdir -p data
 # mv d7frw/dropbox data/test
 # rm -r d7frw
 
-# echo "Downloading NR train-data from osf, this may take a while"
-# osf -p 2abup clone
-# echo "Finished downloading NR train-data now cleaning"
-# mv 2abup/osfstorage/Features/ data/train
-# rm -r 2abup
-
-# echo "Downloading TSR train-data from osf, this may take a while"
-# osf -p 6etg8 clone
-# echo "Finished downloading TSR train-data now cleaning"
-# cp -r 6etg8/osfstorage/Features/* data/train
-# rm -r 6etg8
 
 echo "Downloading test-data from osf, this may take a while"
 osf -p d7frw clone || echo "Warning: osfclient exited with error for d7frw"
@@ -35,5 +24,17 @@ if [ -d "d7frw/dropbox" ]; then
 else
     echo "Warning: d7frw/dropbox not found!"
 fi
+
+echo "Downloading NR train-data from osf, this may take a while"
+osf -p 2abup clone
+echo "Finished downloading NR train-data now cleaning"
+mv 2abup/osfstorage/Features/ data/train
+rm -r 2abup
+
+echo "Downloading TSR train-data from osf, this may take a while"
+osf -p 6etg8 clone
+echo "Finished downloading TSR train-data now cleaning"
+cp -r 6etg8/osfstorage/Features/* data/train
+rm -r 6etg8
 
 echo "Finished downloading data"
