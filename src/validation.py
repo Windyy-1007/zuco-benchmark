@@ -126,6 +126,9 @@ def main():
     start = time.time()
     features = extract_features()
     
+    # Store results for overall statistics
+    all_acc, all_f1, all_p, all_r = [], [], [], []
+
     # Loop through each subject and feature set
     for subject in config.subjects:
         for feature_set, feats in features.items():
@@ -136,6 +139,20 @@ def main():
             # Print results for individual subjects
             for values, name in zip([acc, f1, p, r], ['accuracy', 'F1', 'precision', 'recall']):
                 print(f"Classification {name}: {subject} {feature_set} result={values}")
+
+            # Collect for overall stats
+            all_acc.append(acc)
+            all_f1.append(f1)
+            all_p.append(p)
+            all_r.append(r)
+
+    # Print overall results in requested format
+    print("== OVERALL =====")
+    print(f"Accuracy: {np.mean(all_acc):.4f}")
+    print(f"F1: {np.mean(all_f1):.4f}")
+    print(f"Precission: {np.mean(all_p):.4f}")
+    print(f"Recall: {np.mean(all_r):.4f}")
+    print("==============")
 
     elapsed = (time.time() - start)
     print(f"Elapsed time: {str(timedelta(seconds=elapsed))}")
