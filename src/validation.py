@@ -23,12 +23,16 @@ import extract_features as fe  # Custom module for feature extraction
 import config  # Custom module for global configurations
 import os
 import time
-from sklearn.svm import SVC
 from sklearn.utils import shuffle
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import precision_recall_fscore_support
 import data_helpers as dh  # Custom module for data-related helper functions
 from datetime import timedelta
+from basic_models.svm_class import classify_svm, classify_svm_pso, classify_svm_rfe
+from basic_models.nn_class import classify_knn
+from basic_models.other_basic_models import classify_random_forest, classify_logistic_regression, classify_gradient_boosting
+from basic_models.voting_class import classify_voting, classify_voting_soft, classify_voting_hard
+from tqdm import tqdm
 
 
 def extract_features():
@@ -92,35 +96,6 @@ def prepare_data_splits(samples, test_subject):
     return train_X, train_y, test_X, test_y
 
 
-def classify_svm(train_X, train_y, test_X, test_y):
-    """
-    Train an SVM classifier and evaluate it.
-    
-    Args:
-    train_X (list): Training data.
-    train_y (list): Training labels.
-    test_X (list): Test data.
-    test_y (list): Test labels.
-    
-    Returns:
-    tuple: Accuracy, precision, recall, and F1-score.
-    """
-    # Scale the features
-    scaler = MinMaxScaler(feature_range=(0, 1))
-    train_X = scaler.fit_transform(train_X)
-    test_X = scaler.transform(test_X)
-
-    # Train the SVM classifier
-    clf = SVC(random_state=config.seed, kernel=config.kernel, gamma='scale', cache_size=1000)
-    clf.fit(train_X, train_y)
-    predictions = clf.predict(test_X)
-    
-    # Evaluate the classifier
-    accuracy = sum(predictions == test_y) / len(test_y)
-    p, r, f1, _ = precision_recall_fscore_support(test_y, predictions, average='macro')
-    return accuracy, p, r, f1
-
-
 def main():
     np.random.seed(config.seed)
     start = time.time()
@@ -128,34 +103,55 @@ def main():
     
     # Store results for overall statistics
     all_acc, all_f1, all_p, all_r = [], [], [], []
+    all_acc_r, all_f1_r, all_p_r, all_r_r = [], [], [], []
 
     # Loop through each subject and feature set
-    for subject in config.subjects:
-        for feature_set, feats in features.items():
-            print(f"\nTraining on all subjects, testing on {subject}")
-            train_X, train_y, test_X, test_y = prepare_data_splits(feats, subject)
-            acc, p, r, f1 = classify_svm(train_X, train_y, test_X, test_y)
+    with tqdm(total=len(config.subjects) * len(features), desc="Processing subjects and features") as pbar:
+        for subject in config.subjects:
+            for feature_set, feats in features.items():
+                # print(f"\nTraining on all subjects, testing on {subject}")
+                train_X, train_y, test_X, test_y = prepare_data_splits(feats, subject)
+                # acc, p, r, f1 = classify_svm(train_X, train_y, test_X, test_y)
+                # acc, p, r, f1 = classify_knn(train_X, train_y, test_X, test_y)
+                acc, p, r, f1 = classify_voting(train_X, train_y, test_X, test_y)
+                # acc_r, p_r, r_r, f1_r = classify_svm_rfe(train_X, train_y, test_X, test_y)
 
-            # Print results for individual subjects
-            for values, name in zip([acc, f1, p, r], ['accuracy', 'F1', 'precision', 'recall']):
-                print(f"Classification {name}: {subject} {feature_set} result={values}")
+                # Print results for individual subjects
+                # for values, name in zip([acc, f1, p, r], ['accuracy', 'F1', 'precision', 'recall']):
+                #     print(f"Classification {name}: {subject} {feature_set} result={values}")
 
-            # Collect for overall stats
-            all_acc.append(acc)
-            all_f1.append(f1)
-            all_p.append(p)
-            all_r.append(r)
+                # Collect for overall stats
+                all_acc.append(acc)
+                all_f1.append(f1)
+                all_p.append(p)
+                all_r.append(r)
+                
+                # all_acc_r.append(acc_r)
+                # all_f1_r.append(f1_r)
+                # all_p_r.append(p_r)
+                # all_r_r.append(r_r)
+                
+                pbar.update(1)
 
     # Print overall results in requested format
-    print("== OVERALL =====")
+    print("== OVERALL 1 =====")
     print(f"Accuracy: {np.mean(all_acc):.4f}")
     print(f"F1: {np.mean(all_f1):.4f}")
     print(f"Precission: {np.mean(all_p):.4f}")
     print(f"Recall: {np.mean(all_r):.4f}")
-    print("==============")
+    # print("== OVERALL 2 =====")
+    # print(f"Accuracy: {np.mean(all_acc_r):.4f}")
+    # print(f"F1: {np.mean(all_f1_r):.4f}")
+    # print(f"Precission: {np.mean(all_p_r):.4f}")
+    # print(f"Recall: {np.mean(all_r_r):.4f}")
+    print("== DONE ==")
+    
+    
 
     elapsed = (time.time() - start)
     print(f"Elapsed time: {str(timedelta(seconds=elapsed))}")
+    
+    
 
 
 if __name__ == '__main__':
