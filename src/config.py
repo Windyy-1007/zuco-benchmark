@@ -46,10 +46,71 @@ else:
 create_submission = True
 
 
-# --------------------------- Other configurations --------------------------------
+# --------------------------- Algorithm Configuration --------------------------------
+
+# Available algorithms for dyslexia prediction
+available_algorithms = ["svm", "random_forest", "rf_clustering", "mlp"]
+
+# Select algorithms to run (can be "all" or list of specific algorithms)
+algorithms_to_run = "all"  # Run all available algorithms
 
 # SVM Configuration
-kernel = "linear"  # SVM kernel: 'linear', 'rbf', 'poly', 'sigmoid'
+svm_config = {
+    "kernel": "linear",  # SVM kernel: 'linear', 'rbf', 'poly', 'sigmoid'
+    "C": 1.0,
+    "gamma": "scale"
+}
+
+# Random Forest Configuration
+rf_config = {
+    "n_estimators": 100,
+    "max_depth": None,
+    "min_samples_split": 2,
+    "min_samples_leaf": 1,
+    "random_state": 42
+}
+
+# Random Forest + Hierarchical Clustering Configuration
+rf_clustering_config = {
+    "n_estimators": 100,
+    "n_clusters": 5,  # Number of clusters for hierarchical clustering
+    "linkage": "ward",  # Linkage method: 'ward', 'complete', 'average'
+    "cluster_features": True,  # Whether to cluster features before RF
+    "cluster_subjects": True,  # Whether to cluster subjects
+}
+
+# Multi-Layer Perceptron Configuration
+mlp_config = {
+    "hidden_layer_sizes": (128, 64, 32),
+    "activation": "relu",
+    "solver": "adam",
+    "alpha": 0.001,
+    "learning_rate_init": 0.001,
+    "max_iter": 500,
+    "early_stopping": True,
+    "validation_fraction": 0.1
+}
+
+# CNN Configuration
+cnn_config = {
+    "epochs": 50,
+    "batch_size": 32,
+    "learning_rate": 0.001,
+    "dropout_rate": 0.3,
+    "conv_layers": [
+        {"filters": 32, "kernel_size": 3, "activation": "relu"},
+        {"filters": 64, "kernel_size": 3, "activation": "relu"},
+        {"filters": 128, "kernel_size": 3, "activation": "relu"}
+    ],
+    "dense_layers": [128, 64],
+    "early_stopping_patience": 10,
+    "validation_split": 0.2
+}
+
+# --------------------------- Other configurations --------------------------------
+
+# SVM Configuration (legacy - use svm_config instead)
+kernel = svm_config["kernel"]
 
 # Experiment Setup
 seed = 1
