@@ -1,5 +1,8 @@
 # --------------------------- Benchmark configuration --------------------------------
 
+# Task Configuration
+task_type = "dyslexia_prediction"  # Options: "reading_tasks", "dyslexia_prediction"
+
 # Dataset Configuration
 dataset = "zuco2"
 rootdir = "../data/train/"
@@ -8,7 +11,11 @@ heldout_subjects = ["XBB", "XDT", "XLS", "XPB", "XSE", "XTR", "XWS", "XAH", "XBD
 subjects = ['YAC', 'YAG', 'YAK', 'YDG', 'YDR', 'YFR', 'YFS', 'YHS', 'YIS', 'YLS', 'YMD', 'YRK', 'YRP', 'YSD', 'YSL', 'YTL']  # exclude YMH,  - YRH, YMS
 
 # Feature Set Configuration: Choose from various feature sets for the benchmark
-feature_sets = ["electrode_features_all", "sent_gaze_sacc", "sent_gaze_sacc_eeg_means"] # default
+# For dyslexia prediction, focus on EEG features that are most relevant
+if task_type == "dyslexia_prediction":
+    feature_sets = ["electrode_features_all", "sent_gaze_sacc_eeg_means"]  # Focus on EEG
+else:
+    feature_sets = ["electrode_features_all", "sent_gaze_sacc", "sent_gaze_sacc_eeg_means"]  # default
 """
 Other possible feature_sets are commented below:
 
@@ -17,13 +24,32 @@ EEG mean values: ["theta_mean", "alpha_mean", "beta_mean", "gamma_mean", "eeg_me
 Eye tracking: ["fixation_number", "omission_rate", "reading_speed", 'sent_gaze', \
      "mean_sacc_dur", "max_sacc_velocity", "mean_sacc_velocity", "max_sacc_dur", "max_sacc_amp", "mean_sacc_amp", 'sent_saccade', 'sent_gaze_sacc']
 Combined: ["sent_gaze_eeg_means", "sent_gaze_sacc_eeg_means"]
+
+For dyslexia prediction, recommended feature sets:
+- "electrode_features_all": Full EEG electrode data
+- "electrode_features_theta": Theta band (attention/memory)
+- "electrode_features_gamma": Gamma band (binding/reading)
+- "sent_gaze_sacc_eeg_means": Combined eye-tracking and EEG means
 """
+
+# Classification Configuration
+if task_type == "dyslexia_prediction":
+    class_task = 'dyslexia-prediction'  # Output directory name
+    n_classes = 2  # Dyslexic vs Normal
+    class_names = ['Normal', 'Dyslexic']
+else:
+    class_task = 'tasks'  # Original task classification
+    n_classes = 2  # NR vs TSR
+    class_names = ['NR', 'TSR']
 
 # Submission Configuration
 create_submission = True
 
 
 # --------------------------- Other configurations --------------------------------
+
+# SVM Configuration
+kernel = "linear"  # SVM kernel: 'linear', 'rbf', 'poly', 'sigmoid'
 
 # Experiment Setup
 seed = 1

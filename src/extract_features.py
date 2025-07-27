@@ -5,6 +5,7 @@ import readability
 from nltk import word_tokenize
 import config
 import data_helpers as dh
+import dyslexia_labels as dl
 import h5py
 import json
 
@@ -93,24 +94,40 @@ def relabel_blocks(idx, label_orig):
 
 
 def extract_sentence_features(subject, f, feature_set, feature_dict, label_orig):
-    """extract sentence level features from Matlab struct"""  
+    """extract sentence level features from Matlab struct
+    
+    For dyslexia prediction, the label_orig is ignored and dyslexia labels are applied instead.
+    """  
     rawData = f['rawData']
     if label_orig!="":
         contentData = f['content']
     else:
         with open("subject_lnorm.json", "r") as file:
             contentData = json.load(file)
+    
+    # Get dyslexia label if task is dyslexia prediction
+    dyslexia_label = None
+    if config.task_type == "dyslexia_prediction":
+        dyslexia_labels = dl.load_dyslexia_labels()
+        if dyslexia_labels is None:
+            dyslexia_labels = dl.get_default_dyslexia_labels()
+        dyslexia_label = dyslexia_labels.get(subject, 0)
         
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=FutureWarning)
         for idx, _ in enumerate(rawData):
-            label = label_orig
+            # Use dyslexia label if task is dyslexia prediction, otherwise use original logic
+            if config.task_type == "dyslexia_prediction":
+                label = dyslexia_label
+            else:
+                label = label_orig
+                if config.class_task == "sessions":
+                    label = relabel_sessions(idx, label)
+                if config.class_task == "blocks" or config.class_task == "blocks-in-sets"\
+                    or config.class_task == "tasks_blocks":
+                    label = relabel_blocks(idx, label)
+            
             full_idx = len(feature_dict[feature_set])
-            if config.class_task == "sessions":
-                label = relabel_sessions(idx, label)
-            if config.class_task == "blocks" or config.class_task == "blocks-in-sets"\
-                or config.class_task == "tasks_blocks":
-                label = relabel_blocks(idx, label)
 
             if label_orig!="":
                 obj_reference_content = contentData[idx][0]

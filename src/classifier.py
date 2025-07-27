@@ -10,17 +10,22 @@ import config
 def build_data(data, labels):
     """
     Builds the data for the classification task.
-    TODO vectorize
+    Handles both reading task classification and dyslexia prediction.
     """
     X, y = [],[]
     for subj in data:
         for it in data[subj]:
             X.append(it)
         for label in labels[subj]:
-            if label == "NR":
-                y.append(1)
+            if config.task_type == "dyslexia_prediction":
+                # For dyslexia: label is already 0 or 1
+                y.append(int(label))
             else:
-                y.append(0)
+                # For reading tasks: NR=1, TSR=0
+                if label == "NR":
+                    y.append(1)
+                else:
+                    y.append(0)
     return X, y
 
 

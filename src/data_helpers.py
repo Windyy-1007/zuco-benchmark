@@ -14,6 +14,7 @@ import json
 import config
 
 import extract_features as fe
+import dyslexia_labels as dl
 
 
 def ensure_dir_exists(directory):
@@ -28,8 +29,18 @@ def get_or_extract_features(subjects, dir, train_feats=True):
     print("Extracting features")
     """
     Extract features for all subjects.
+    For dyslexia prediction, applies dyslexia labels instead of task labels.
     """
     features = {}
+    
+    # Load dyslexia labels if task is dyslexia prediction
+    dyslexia_labels = None
+    if config.task_type == "dyslexia_prediction":
+        dyslexia_labels = dl.load_dyslexia_labels()
+        if dyslexia_labels is None:
+            print("Warning: Dyslexia labels not found. Using default labels.")
+            dyslexia_labels = dl.get_default_dyslexia_labels()
+    
     for subject in subjects:
         print(f"Extracting features for subject {subject}")
         for feature_set in config.feature_sets:
@@ -38,7 +49,14 @@ def get_or_extract_features(subjects, dir, train_feats=True):
             feature_path = os.path.join("features", f"{subject}_{feature_set}.npy")
             if os.path.isfile(feature_path):
                 print("Loading saved features: ", feature_set)
-                features[feature_set].update(np.load(feature_path,allow_pickle='TRUE').item())
+                loaded_features = np.load(feature_path, allow_pickle='TRUE').item()
+                
+                # Apply dyslexia labels if needed
+                if config.task_type == "dyslexia_prediction" and dyslexia_labels:
+                    loaded_features = dl.create_sentence_level_dyslexia_labels(
+                        {subject: loaded_features}, dyslexia_labels)[subject]
+                
+                features[feature_set].update(loaded_features)
             else:
                 print("Extracting features: ", feature_set)
                 if train_feats:
@@ -49,7 +67,14 @@ def get_or_extract_features(subjects, dir, train_feats=True):
                 else:
                     f = read_mat_file(os.path.join(dir, f"results{subject}.mat"))
                     fe.extract_sentence_features(subject, f, feature_set, features, "")
+                
+                # Apply dyslexia labels to newly extracted features
                 only_subjects = {subj_feat: features[feature_set][subj_feat] for subj_feat in features[feature_set] if subj_feat.startswith(subject)}
+                
+                if config.task_type == "dyslexia_prediction" and dyslexia_labels:
+                    only_subjects = dl.create_sentence_level_dyslexia_labels(
+                        {subject: only_subjects}, dyslexia_labels)[subject]
+                
                 np.save(feature_path, only_subjects)
 
     if config.plot_all_subjects_features: 
