@@ -330,9 +330,9 @@ def main():
         result_file.close()
     
     # Print algorithm comparison summary
-    print(f"\n{'='*60}")
+    print(f"\n{'='*80}")
     print("ALGORITHM COMPARISON SUMMARY")
-    print("="*60)
+    print("="*80)
     
     comparison_df = []
     for algorithm in algorithm_summaries:
@@ -343,25 +343,115 @@ def main():
                     "Algorithm": algorithm,
                     "Feature_Set": feature_set,
                     "Accuracy": metrics["mean_accuracy"],
-                    "F1_Score": metrics["mean_f1"],
                     "Precision": metrics["mean_precision"],
-                    "Recall": metrics["mean_recall"]
+                    "Recall": metrics["mean_recall"],
+                    "F1_Score": metrics["mean_f1"]
                 })
     
     if comparison_df:
         df = pd.DataFrame(comparison_df)
-        print(df.round(3).to_string(index=False))
         
-        # Save comparison to CSV
+        # Create a nicely formatted table
+        print(f"\n{'Algorithm':<20} {'Feature Set':<30} {'Accuracy':<10} {'Precision':<11} {'Recall':<10} {'F1-Score':<10}")
+        print("-" * 91)
+        
+        for _, row in df.iterrows():
+            print(f"{row['Algorithm']:<20} {row['Feature_Set']:<30} "
+                  f"{row['Accuracy']:<10.3f} {row['Precision']:<11.3f} "
+                  f"{row['Recall']:<10.3f} {row['F1_Score']:<10.3f}")
+        
+        print("\n" + "="*91)
+        
+        # Group feature sets by type for better analysis
+        def categorize_feature_set(feature_name):
+            if 'electrode' in feature_name:
+                return 'EEG'
+            elif any(x in feature_name for x in ['gaze', 'sacc', 'fixation', 'omission', 'reading']):
+                if 'eeg' in feature_name:
+                    return 'Combined (EEG + Eye-tracking)'
+                else:
+                    return 'Eye-tracking'
+            else:
+                return 'Other'
+        
+        df['Feature_Category'] = df['Feature_Set'].apply(categorize_feature_set)
+        
+        # Create summary by feature category
+        category_summary = df.groupby('Feature_Category').agg({
+            'Accuracy': ['mean', 'std', 'max'],
+            'Precision': ['mean', 'std', 'max'],
+            'Recall': ['mean', 'std', 'max'],
+            'F1_Score': ['mean', 'std', 'max']
+        }).round(3)
+        
+        print("\nPERFORMANCE BY FEATURE TYPE:")
+        print("-" * 80)
+        print(f"{'Feature Type':<25} {'Accuracy (Mean±Std/Max)':<25} {'F1-Score (Mean±Std/Max)':<25}")
+        print("-" * 80)
+        
+        for category in category_summary.index:
+            acc_mean = category_summary.loc[category, ('Accuracy', 'mean')]
+            acc_std = category_summary.loc[category, ('Accuracy', 'std')]
+            acc_max = category_summary.loc[category, ('Accuracy', 'max')]
+            f1_mean = category_summary.loc[category, ('F1_Score', 'mean')]
+            f1_std = category_summary.loc[category, ('F1_Score', 'std')]
+            f1_max = category_summary.loc[category, ('F1_Score', 'max')]
+            
+            print(f"{category:<25} {acc_mean:.3f}±{acc_std:.3f}/{acc_max:.3f}{'':<8} "
+                  f"{f1_mean:.3f}±{f1_std:.3f}/{f1_max:.3f}")
+        
+        # Create summary by algorithm (averaging across feature sets)
+        algorithm_summary = df.groupby('Algorithm').agg({
+            'Accuracy': ['mean', 'std'],
+            'Precision': ['mean', 'std'],
+            'Recall': ['mean', 'std'],
+            'F1_Score': ['mean', 'std']
+        }).round(3)
+        
+        print("\nALGORITHM PERFORMANCE SUMMARY (Mean ± Std across all feature sets):")
+        print("-" * 80)
+        print(f"{'Algorithm':<20} {'Accuracy':<15} {'Precision':<15} {'Recall':<15} {'F1-Score':<15}")
+        print("-" * 80)
+        
+        for algorithm in algorithm_summary.index:
+            acc_mean = algorithm_summary.loc[algorithm, ('Accuracy', 'mean')]
+            acc_std = algorithm_summary.loc[algorithm, ('Accuracy', 'std')]
+            prec_mean = algorithm_summary.loc[algorithm, ('Precision', 'mean')]
+            prec_std = algorithm_summary.loc[algorithm, ('Precision', 'std')]
+            rec_mean = algorithm_summary.loc[algorithm, ('Recall', 'mean')]
+            rec_std = algorithm_summary.loc[algorithm, ('Recall', 'std')]
+            f1_mean = algorithm_summary.loc[algorithm, ('F1_Score', 'mean')]
+            f1_std = algorithm_summary.loc[algorithm, ('F1_Score', 'std')]
+            
+            print(f"{algorithm:<20} {acc_mean:.3f}±{acc_std:.3f}{'':<5} "
+                  f"{prec_mean:.3f}±{prec_std:.3f}{'':<5} {rec_mean:.3f}±{rec_std:.3f}{'':<5} "
+                  f"{f1_mean:.3f}±{f1_std:.3f}")
+        
+        # Show top performing combinations for each feature category
+        print("\nTOP PERFORMERS BY FEATURE CATEGORY:")
+        print("-" * 80)
+        for category in df['Feature_Category'].unique():
+            category_df = df[df['Feature_Category'] == category]
+            if len(category_df) > 0:
+                best_f1 = category_df.loc[category_df['F1_Score'].idxmax()]
+                print(f"{category:<25}: {best_f1['Algorithm']} + {best_f1['Feature_Set']} (F1: {best_f1['F1_Score']:.3f})")
+        
+        # Save comparison to CSV with categories
         df.to_csv("../results/algorithm_comparison.csv", index=False)
         print(f"\nDetailed comparison saved to: ../results/algorithm_comparison.csv")
         
-        # Find best performing algorithm
+        # Find best performing algorithms
         best_accuracy = df.loc[df['Accuracy'].idxmax()]
+        best_precision = df.loc[df['Precision'].idxmax()]
+        best_recall = df.loc[df['Recall'].idxmax()]
         best_f1 = df.loc[df['F1_Score'].idxmax()]
         
-        print(f"\nBest Accuracy: {best_accuracy['Algorithm']} with {best_accuracy['Feature_Set']} ({best_accuracy['Accuracy']:.3f})")
-        print(f"Best F1 Score: {best_f1['Algorithm']} with {best_f1['Feature_Set']} ({best_f1['F1_Score']:.3f})")
+        print(f"\nBEST PERFORMANCE BY METRIC:")
+        print("-" * 50)
+        print(f"Best Accuracy:  {best_accuracy['Algorithm']} + {best_accuracy['Feature_Set']} ({best_accuracy['Accuracy']:.3f})")
+        print(f"Best Precision: {best_precision['Algorithm']} + {best_precision['Feature_Set']} ({best_precision['Precision']:.3f})")
+        print(f"Best Recall:    {best_recall['Algorithm']} + {best_recall['Feature_Set']} ({best_recall['Recall']:.3f})")
+        print(f"Best F1-Score:  {best_f1['Algorithm']} + {best_f1['Feature_Set']} ({best_f1['F1_Score']:.3f})")
     
     # Create submission files if requested
     if config.create_submission and all_results:

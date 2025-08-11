@@ -11,9 +11,32 @@ heldout_subjects = ["XBB", "XDT", "XLS", "XPB", "XSE", "XTR", "XWS", "XAH", "XBD
 subjects = ['YAC', 'YAG', 'YAK', 'YDG', 'YDR', 'YFR', 'YFS', 'YHS', 'YIS', 'YLS', 'YMD', 'YRK', 'YRP', 'YSD', 'YSL', 'YTL']  # exclude YMH,  - YRH, YMS
 
 # Feature Set Configuration: Choose from various feature sets for the benchmark
-# For dyslexia prediction, focus on EEG features that are most relevant
+# For dyslexia prediction, include both EEG and comprehensive eye-tracking features
 if task_type == "dyslexia_prediction":
-    feature_sets = ["electrode_features_all", "sent_gaze_sacc_eeg_means"]  # Focus on EEG
+    feature_sets = [
+        # EEG Features
+        "electrode_features_all", 
+        "sent_gaze_sacc_eeg_means",
+        
+        # Eye-tracking Features
+        "sent_gaze_sacc",           # Combined gaze and saccade features
+        "sent_gaze",                # Gaze-only features
+        "sent_saccade",             # Saccade-only features
+        "fixation_number",          # Fixation count features
+        "omission_rate",            # Reading omission features
+        "reading_speed",            # Reading speed features
+        
+        # Individual saccade metrics
+        "mean_sacc_dur",            # Mean saccade duration
+        "max_sacc_velocity",        # Maximum saccade velocity
+        "mean_sacc_velocity",       # Mean saccade velocity
+        "max_sacc_dur",             # Maximum saccade duration
+        "max_sacc_amp",             # Maximum saccade amplitude
+        "mean_sacc_amp",            # Mean saccade amplitude
+        
+        # Combined features
+        "sent_gaze_eeg_means"       # Gaze + EEG means (without saccades)
+    ]
 else:
     feature_sets = ["electrode_features_all", "sent_gaze_sacc", "sent_gaze_sacc_eeg_means"]  # default
 """
