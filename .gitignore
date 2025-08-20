@@ -12,6 +12,7 @@ matlab/*.png
 matlab/*.pdf
 plots
 
+feat_csv/
 data/
 features/
 predictions/
