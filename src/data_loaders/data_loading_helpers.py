@@ -3,6 +3,9 @@ import numpy as np
 import pickle as pkl
 import data_loading_helpers as dlh
 import re
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
 eeg_float_resolution = np.float16

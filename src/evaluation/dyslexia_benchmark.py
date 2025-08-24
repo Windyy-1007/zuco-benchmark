@@ -20,10 +20,14 @@ import time
 from datetime import timedelta
 import numpy as np
 import pandas as pd
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
-import data_helpers as dh
-import classifier as clf
-import dyslexia_labels as dl
+
+from data_loaders import data_helpers as dh
+from models import classifier as clf
+from labeling import dyslexia_labels as dl
 from sklearn.decomposition import PCA
 
 def main():

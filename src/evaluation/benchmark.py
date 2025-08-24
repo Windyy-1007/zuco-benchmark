@@ -23,11 +23,13 @@ from datetime import timedelta
 import numpy as np
 import os
 import time
-
-import extract_features as fe
-import classifier
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
-import data_helpers as dh
+
+from feature_extraction import extract_features as fe
+from models import classifier
+from data_loaders import data_helpers as dh
 
 
 def main():

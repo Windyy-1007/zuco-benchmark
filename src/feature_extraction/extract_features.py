@@ -1,13 +1,16 @@
 import warnings
-import data_loading_helpers as dlh
 import numpy as np
 import readability
 from nltk import word_tokenize
-import config
-import data_helpers as dh
-import dyslexia_labels as dl
 import h5py
 import json
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+import config
+from data_loaders import data_loading_helpers as dlh
+from data_loaders import data_helpers as dh
+from labeling import dyslexia_labels as dl
 
 
 def flesch_reading_ease(text):

@@ -11,10 +11,13 @@ import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler
 import json
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
-import extract_features as fe
-import dyslexia_labels as dl
+from feature_extraction import extract_features as fe
+from labeling import dyslexia_labels as dl
 
 
 def ensure_dir_exists(directory):
