@@ -12,6 +12,33 @@ import seaborn as sns
 from pathlib import Path
 import config
 
+def compute_performance_score(metrics):
+    """
+    Compute the composite EEG performance score based on updated weights.
+
+    Args:
+        metrics (dict): Dictionary containing the following keys:
+            - theta_alpha_power
+            - connectivity
+            - signal_variability
+            - complexity
+            - erp_markers
+            - feature_stability
+            - mean_signal
+
+    Returns:
+        float: Composite performance score.
+    """
+    return (
+        metrics['theta_alpha_power'] * 0.25 +
+        metrics['connectivity'] * 0.20 +
+        metrics['signal_variability'] * 0.15 +
+        metrics['complexity'] * 0.15 +
+        metrics['erp_markers'] * 0.15 +
+        metrics['feature_stability'] * 0.10 +
+        metrics['mean_signal'] * 0.05
+    )
+
 def load_and_analyze_eeg_features():
     """
     Load EEG features and compute performance metrics for each subject
@@ -27,56 +54,88 @@ def load_and_analyze_eeg_features():
             eeg_path = f"../features/{subject}_electrode_features_all.npy"
             eeg_data = np.load(eeg_path, allow_pickle=True).item()
             
-            # Extract features and compute performance metrics
-            features_list = []
-            labels_list = []
+            # Extract features from all samples for this subject
+            all_features = []
+            for sample_id, sample_data in eeg_data.items():
+                features = np.array(sample_data[:-1])  # Remove label
+                all_features.append(features)
             
-            for sample_id, data in eeg_data.items():
-                # Data is a list where features are all elements except the last (which is label)
-                features = np.array(data[:-1])  # All except last element
-                label = data[-1]  # Last element is label
-                
-                features_list.append(features)
-                labels_list.append(label)
+            all_features = np.array(all_features)  # Shape: (n_samples, n_features)
             
-            if features_list:
-                features_array = np.array(features_list)
-                
-                # Compute performance metrics
-                # 1. Mean signal strength across all electrodes and samples
-                mean_signal = np.mean(np.abs(features_array))
-                
-                # 2. Signal variance (higher = more active brain)
-                signal_variance = np.var(features_array)
-                
-                # 3. Signal-to-noise ratio approximation
-                signal_power = np.mean(features_array ** 2)
-                
-                # 4. Number of samples (reading efficiency)
-                n_samples = len(features_list)
-                
-                # 5. Feature stability (lower std across samples = more consistent)
-                feature_stability = 1 / (1 + np.mean(np.std(features_array, axis=0)))
-                
-                # Composite EEG performance score
-                # Lower score = potentially dyslexic (poor neural efficiency)
-                performance_score = (signal_variance * 0.3 + 
-                                   mean_signal * 0.25 + 
-                                   signal_power * 0.2 + 
-                                   (n_samples / 100) * 0.1 +
-                                   feature_stability * 0.15)
-                
-                eeg_performance[subject] = {
-                    'performance_score': performance_score,
-                    'mean_signal': mean_signal,
-                    'signal_variance': signal_variance,
-                    'signal_power': signal_power,
-                    'n_samples': n_samples,
-                    'feature_stability': feature_stability
-                }
-                
-                print(f"Subject {subject}: Performance Score = {performance_score:.6f}, Samples = {n_samples}")
-                
+            # Split electrode features into frequency bands (420 features = 105 electrodes x 4 bands)
+            band_size = all_features.shape[1] // 4
+            theta_features = all_features[:, :band_size]          # 0-104: Theta
+            alpha_features = all_features[:, band_size:2*band_size]  # 105-209: Alpha  
+            beta_features = all_features[:, 2*band_size:3*band_size]  # 210-314: Beta
+            gamma_features = all_features[:, 3*band_size:]        # 315-419: Gamma
+            
+            # 1. Theta/Alpha Power Ratio (lower ratio indicates better performance)
+            theta_power = np.mean(theta_features**2)
+            alpha_power = np.mean(alpha_features**2)
+            theta_alpha_power = 1.0 / (1.0 + theta_power / (alpha_power + 1e-8))
+            
+            # 2. Connectivity (measured as correlation between electrodes)
+            # Calculate average correlation between electrode pairs within each band
+            theta_corr = np.corrcoef(theta_features.T)
+            alpha_corr = np.corrcoef(alpha_features.T)
+            # Take upper triangle (excluding diagonal) and average
+            theta_conn = np.mean(theta_corr[np.triu_indices_from(theta_corr, k=1)])
+            alpha_conn = np.mean(alpha_corr[np.triu_indices_from(alpha_corr, k=1)])
+            connectivity = (abs(theta_conn) + abs(alpha_conn)) / 2.0
+            
+            # 3. Signal Variability (coefficient of variation across samples)
+            signal_means = np.mean(all_features, axis=0)
+            signal_stds = np.std(all_features, axis=0)
+            cv = signal_stds / (signal_means + 1e-8)  # Coefficient of variation
+            signal_variability = 1.0 / (1.0 + np.mean(cv))  # Inverse for better = higher
+            
+            # 4. Complexity (using spectral entropy-like measure)
+            # Calculate power in each frequency band and use entropy
+            band_powers = np.array([
+                np.mean(theta_features**2),
+                np.mean(alpha_features**2), 
+                np.mean(beta_features**2),
+                np.mean(gamma_features**2)
+            ])
+            band_powers_norm = band_powers / (np.sum(band_powers) + 1e-8)
+            # Shannon entropy of band powers (higher complexity = more distributed power)
+            complexity = -np.sum(band_powers_norm * np.log(band_powers_norm + 1e-8))
+            
+            # 5. ERP Markers (using beta/gamma activity as cognitive load indicator)
+            beta_power = np.mean(beta_features**2)
+            gamma_power = np.mean(gamma_features**2) 
+            erp_markers = 1.0 / (1.0 + (beta_power + gamma_power) / 2.0)  # Lower = better
+            
+            # 6. Feature Stability (consistency across samples)
+            feature_stability = 1.0 / (1.0 + np.mean(np.std(all_features, axis=0)))
+            
+            # 7. Mean Signal Strength (overall signal amplitude)
+            mean_signal = 1.0 / (1.0 + np.mean(np.abs(all_features)))
+            
+            # Compute composite performance score
+            performance_score = compute_performance_score({
+                'theta_alpha_power': theta_alpha_power,
+                'connectivity': connectivity,
+                'signal_variability': signal_variability,
+                'complexity': complexity,
+                'erp_markers': erp_markers,
+                'feature_stability': feature_stability,
+                'mean_signal': mean_signal
+            })
+            
+            eeg_performance[subject] = {
+                'performance_score': performance_score,
+                'theta_alpha_power': theta_alpha_power,
+                'connectivity': connectivity,
+                'signal_variability': signal_variability,
+                'complexity': complexity,
+                'erp_markers': erp_markers,
+                'feature_stability': feature_stability,
+                'mean_signal': mean_signal
+            }
+            
+            print(f"Subject {subject}: Performance Score = {performance_score:.6f}")
+            
         except Exception as e:
             print(f"Error loading data for subject {subject}: {e}")
     
@@ -144,8 +203,8 @@ def plot_performance_distribution(eeg_performance, dyslexia_labels):
     dyslexic_scores = [scores[i] for i, s in enumerate(subjects) if dyslexia_labels[s] == 1]
     normal_scores = [scores[i] for i, s in enumerate(subjects) if dyslexia_labels[s] == 0]
     
-    plt.boxplot([dyslexic_scores, normal_scores], 
-                labels=['Dyslexic (n=3)', f'Normal (n={len(normal_scores)})'])
+    plt.boxplot([dyslexic_scores, normal_scores])
+    plt.xticks([1, 2], ['Dyslexic (n=3)', f'Normal (n={len(normal_scores)})'])
     plt.ylabel('EEG Performance Score')
     plt.title('Performance Score Distribution by Group')
     
