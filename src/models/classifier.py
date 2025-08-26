@@ -5,6 +5,9 @@ from sklearn.metrics import precision_recall_fscore_support
 from sklearn.utils import resample
 
 import numpy as np
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import config
 
 def build_data(data, labels):
