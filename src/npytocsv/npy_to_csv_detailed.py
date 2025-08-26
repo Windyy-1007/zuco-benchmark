@@ -92,22 +92,24 @@ def calculate_statistics(data, stats_config):
 def get_feature_labels(feature_set_name, num_features):
     """Get proper feature labels based on the feature set type."""
     
-    # Electrode names from config
-    electrode_names = ['E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E9', 'E10', 'E11', 'E12', 'E13', 'E15', 'E16', 'E18', 'E19', 'E20',
-                      'E22', 'E23', 'E24', 'E26', 'E27', 'E28', 'E29', 'E30', 'E31', 'E33', 'E34', 'E35', 'E36', 'E37', 'E38', 'E39',
-                      'E40', 'E41', 'E42', 'E43', 'E44', 'E45', 'E46', 'E47', 'E50', 'E51', 'E52', 'E53', 'E54', 'E55', 'E57', 'E58',
-                      'E59', 'E60', 'E61', 'E62', 'E64', 'E65', 'E66', 'E67', 'E69', 'E70', 'E71', 'E72', 'E74', 'E75', 'E76', 'E77',
-                      'E78', 'E79', 'E80', 'E82', 'E83', 'E84', 'E85', 'E86', 'E87', 'E89', 'E90', 'E91', 'E92', 'E93', 'E95', 'E96',
-                      'E97', 'E98', 'E100', 'E101', 'E102', 'E103', 'E104', 'E105', 'E106', 'E108', 'E109', 'E110', 'E111', 'E112',
-                      'E114', 'E115', 'E116', 'E117', 'E118', 'E120', 'E121', 'E122', 'E123', 'E124']
+    # Electrode names starting from E1
+    electrode_names = ['E1', 'E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E8', 'E9', 'E10', 'E11', 'E12', 'E13', 'E14', 'E15', 'E16', 'E17', 'E18', 'E19', 'E20',
+                      'E21', 'E22', 'E23', 'E24', 'E25', 'E26', 'E27', 'E28', 'E29', 'E30', 'E31', 'E32', 'E33', 'E34', 'E35', 'E36', 'E37', 'E38', 'E39',
+                      'E40', 'E41', 'E42', 'E43', 'E44', 'E45', 'E46', 'E47', 'E48', 'E49', 'E50', 'E51', 'E52', 'E53', 'E54', 'E55', 'E56', 'E57', 'E58',
+                      'E59', 'E60', 'E61', 'E62', 'E63', 'E64', 'E65', 'E66', 'E67', 'E68', 'E69', 'E70', 'E71', 'E72', 'E73', 'E74', 'E75', 'E76', 'E77',
+                      'E78', 'E79', 'E80', 'E81', 'E82', 'E83', 'E84', 'E85', 'E86', 'E87', 'E88', 'E89', 'E90', 'E91', 'E92', 'E93', 'E94', 'E95', 'E96',
+                      'E97', 'E98', 'E99', 'E100', 'E101', 'E102', 'E103', 'E104', 'E105', 'E106', 'E107', 'E108', 'E109', 'E110', 'E111', 'E112', 'E113',
+                      'E114', 'E115', 'E116', 'E117', 'E118', 'E119', 'E120', 'E121', 'E122', 'E123', 'E124', 'E125', 'E126', 'E127', 'E128']
     
-    if 'electrode_features_all' in feature_set_name and num_features == 420:
-        # 420 features: 4 frequency bands × 105 electrodes each
+    if 'electrode_features_all' in feature_set_name:
+        # Handle electrode features - always start from E1
+        electrodes_per_band = num_features // 4
         labels = []
         bands = ['Theta', 'Alpha', 'Beta', 'Gamma']
+        
         for band in bands:
-            for i, electrode in enumerate(electrode_names[:105]):  # Use first 105 electrodes
-                labels.append(f'{band}_{electrode}')
+            for i in range(electrodes_per_band):
+                labels.append(f'{band}_{electrode_names[i]}')
         return labels
     
     elif 'sent_gaze_sacc_eeg_means' in feature_set_name and num_features == 13:
@@ -133,17 +135,17 @@ def get_feature_labels(feature_set_name, num_features):
         return ['Mean_Saccade_Duration', 'Max_Saccade_Velocity', 'Mean_Saccade_Velocity',
                 'Max_Saccade_Duration', 'Mean_Saccade_Amplitude', 'Max_Saccade_Amplitude']
     
-    elif 'electrode_features_theta' in feature_set_name and num_features == 105:
-        return [f'Theta_{electrode}' for electrode in electrode_names[:105]]
+    elif 'electrode_features_theta' in feature_set_name:
+        return [f'Theta_{electrode_names[i]}' for i in range(num_features)]
     
-    elif 'electrode_features_alpha' in feature_set_name and num_features == 105:
-        return [f'Alpha_{electrode}' for electrode in electrode_names[:105]]
+    elif 'electrode_features_alpha' in feature_set_name:
+        return [f'Alpha_{electrode_names[i]}' for i in range(num_features)]
     
-    elif 'electrode_features_beta' in feature_set_name and num_features == 105:
-        return [f'Beta_{electrode}' for electrode in electrode_names[:105]]
+    elif 'electrode_features_beta' in feature_set_name:
+        return [f'Beta_{electrode_names[i]}' for i in range(num_features)]
     
-    elif 'electrode_features_gamma' in feature_set_name and num_features == 105:
-        return [f'Gamma_{electrode}' for electrode in electrode_names[:105]]
+    elif 'electrode_features_gamma' in feature_set_name:
+        return [f'Gamma_{electrode_names[i]}' for i in range(num_features)]
     
     elif 'eeg_means' in feature_set_name and num_features == 4:
         return ['Theta_Mean', 'Alpha_Mean', 'Beta_Mean', 'Gamma_Mean']
@@ -254,8 +256,16 @@ def process_features_to_columns(data_dict, stats_config):
     # First pass: collect all feature arrays and find max length
     for subject_id, features in data_dict.items():
         if isinstance(features, (list, np.ndarray)):
-            # Remove empty strings and process numeric data
-            numeric_features = [x for x in features if x != '' and x is not None]
+            # Remove empty strings and labels (last item) - keep only numeric features
+            numeric_features = []
+            for i, x in enumerate(features):
+                # Skip if it's empty string, None, or if it's the last item and it's a string label
+                if x == '' or x is None:
+                    continue
+                # If it's the last item and it's a string (label), skip it
+                if i == len(features) - 1 and isinstance(x, str):
+                    continue
+                numeric_features.append(x)
             
             if numeric_features:
                 # Process each feature through statistical calculation
