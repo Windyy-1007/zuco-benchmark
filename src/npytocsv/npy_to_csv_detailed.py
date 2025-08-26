@@ -89,6 +89,99 @@ def calculate_statistics(data, stats_config):
                 results[stat] = 0
         return results
 
+def get_feature_labels(feature_set_name, num_features):
+    """Get proper feature labels based on the feature set type."""
+    
+    # Electrode names from config
+    electrode_names = ['E2', 'E3', 'E4', 'E5', 'E6', 'E7', 'E9', 'E10', 'E11', 'E12', 'E13', 'E15', 'E16', 'E18', 'E19', 'E20',
+                      'E22', 'E23', 'E24', 'E26', 'E27', 'E28', 'E29', 'E30', 'E31', 'E33', 'E34', 'E35', 'E36', 'E37', 'E38', 'E39',
+                      'E40', 'E41', 'E42', 'E43', 'E44', 'E45', 'E46', 'E47', 'E50', 'E51', 'E52', 'E53', 'E54', 'E55', 'E57', 'E58',
+                      'E59', 'E60', 'E61', 'E62', 'E64', 'E65', 'E66', 'E67', 'E69', 'E70', 'E71', 'E72', 'E74', 'E75', 'E76', 'E77',
+                      'E78', 'E79', 'E80', 'E82', 'E83', 'E84', 'E85', 'E86', 'E87', 'E89', 'E90', 'E91', 'E92', 'E93', 'E95', 'E96',
+                      'E97', 'E98', 'E100', 'E101', 'E102', 'E103', 'E104', 'E105', 'E106', 'E108', 'E109', 'E110', 'E111', 'E112',
+                      'E114', 'E115', 'E116', 'E117', 'E118', 'E120', 'E121', 'E122', 'E123', 'E124']
+    
+    if 'electrode_features_all' in feature_set_name and num_features == 420:
+        # 420 features: 4 frequency bands × 105 electrodes each
+        labels = []
+        bands = ['Theta', 'Alpha', 'Beta', 'Gamma']
+        for band in bands:
+            for i, electrode in enumerate(electrode_names[:105]):  # Use first 105 electrodes
+                labels.append(f'{band}_{electrode}')
+        return labels
+    
+    elif 'sent_gaze_sacc_eeg_means' in feature_set_name and num_features == 13:
+        return ['Omission_Rate', 'Weighted_Fixation_Count', 'Weighted_Reading_Speed',
+                'Mean_Saccade_Duration', 'Max_Saccade_Velocity', 'Mean_Saccade_Velocity',
+                'Max_Saccade_Duration', 'Mean_Saccade_Amplitude', 'Max_Saccade_Amplitude',
+                'Theta_Mean', 'Alpha_Mean', 'Beta_Mean', 'Gamma_Mean']
+    
+    elif 'sent_gaze_sacc' in feature_set_name and num_features == 9:
+        return ['Omission_Rate', 'Weighted_Fixation_Count', 'Weighted_Reading_Speed',
+                'Mean_Saccade_Duration', 'Max_Saccade_Velocity', 'Mean_Saccade_Velocity',
+                'Max_Saccade_Duration', 'Mean_Saccade_Amplitude', 'Max_Saccade_Amplitude']
+    
+    elif 'sent_gaze_eeg_means' in feature_set_name and num_features == 11:
+        return ['Omission_Rate', 'Weighted_Fixation_Count', 'Weighted_Reading_Speed',
+                'Mean_Saccade_Duration', 'Max_Saccade_Velocity', 'Mean_Saccade_Velocity',
+                'Max_Saccade_Duration', 'Theta_Mean', 'Alpha_Mean', 'Beta_Mean', 'Gamma_Mean']
+    
+    elif 'sent_gaze' in feature_set_name and num_features == 4:
+        return ['Omission_Rate', 'Weighted_Fixation_Count', 'Weighted_Reading_Speed', 'Mean_Saccade_Duration']
+    
+    elif 'sent_saccade' in feature_set_name and num_features == 6:
+        return ['Mean_Saccade_Duration', 'Max_Saccade_Velocity', 'Mean_Saccade_Velocity',
+                'Max_Saccade_Duration', 'Mean_Saccade_Amplitude', 'Max_Saccade_Amplitude']
+    
+    elif 'electrode_features_theta' in feature_set_name and num_features == 105:
+        return [f'Theta_{electrode}' for electrode in electrode_names[:105]]
+    
+    elif 'electrode_features_alpha' in feature_set_name and num_features == 105:
+        return [f'Alpha_{electrode}' for electrode in electrode_names[:105]]
+    
+    elif 'electrode_features_beta' in feature_set_name and num_features == 105:
+        return [f'Beta_{electrode}' for electrode in electrode_names[:105]]
+    
+    elif 'electrode_features_gamma' in feature_set_name and num_features == 105:
+        return [f'Gamma_{electrode}' for electrode in electrode_names[:105]]
+    
+    elif 'eeg_means' in feature_set_name and num_features == 4:
+        return ['Theta_Mean', 'Alpha_Mean', 'Beta_Mean', 'Gamma_Mean']
+    
+    elif num_features == 1:
+        # Single feature sets
+        if 'omission_rate' in feature_set_name:
+            return ['Omission_Rate']
+        elif 'fixation_number' in feature_set_name:
+            return ['Weighted_Fixation_Count']
+        elif 'reading_speed' in feature_set_name:
+            return ['Weighted_Reading_Speed']
+        elif 'mean_sacc_dur' in feature_set_name:
+            return ['Mean_Saccade_Duration']
+        elif 'max_sacc_velocity' in feature_set_name:
+            return ['Max_Saccade_Velocity']
+        elif 'mean_sacc_velocity' in feature_set_name:
+            return ['Mean_Saccade_Velocity']
+        elif 'max_sacc_dur' in feature_set_name:
+            return ['Max_Saccade_Duration']
+        elif 'max_sacc_amp' in feature_set_name:
+            return ['Max_Saccade_Amplitude']
+        elif 'mean_sacc_amp' in feature_set_name:
+            return ['Mean_Saccade_Amplitude']
+        elif 'theta_mean' in feature_set_name:
+            return ['Theta_Mean']
+        elif 'alpha_mean' in feature_set_name:
+            return ['Alpha_Mean']
+        elif 'beta_mean' in feature_set_name:
+            return ['Beta_Mean']
+        elif 'gamma_mean' in feature_set_name:
+            return ['Gamma_Mean']
+        elif 'flesch_baseline' in feature_set_name:
+            return ['Flesch_Reading_Ease']
+    
+    # Fallback to generic labels if no match found
+    return [f'Feature_{i+1}' for i in range(num_features)]
+
 def load_config(config_file):
     """Load configuration from JSON file."""
     default_config = {
@@ -195,6 +288,9 @@ def process_npy_to_csv_detailed(npy_file, output_csv, config=None):
         
         max_features = 1  # Default value
         
+        # Extract feature set name from filename
+        feature_set_name = os.path.basename(npy_file).replace('.npy', '')
+        
         if isinstance(data, dict):
             # Process features to get column format
             all_features, max_features = process_features_to_columns(data, stats_config)
@@ -206,15 +302,18 @@ def process_npy_to_csv_detailed(npy_file, output_csv, config=None):
             # Calculate number of original features
             num_original_features = max_features // len(stats_config)
             
+            # Get proper feature labels based on the feature set type
+            feature_labels = get_feature_labels(feature_set_name, num_original_features)
+            
             # Create CSV with individual feature columns
             with open(output_csv, mode='w', newline='', encoding='utf-8') as csv_file:
                 writer = csv.writer(csv_file)
                 
                 # Write header with statistical suffixes
                 header = ['Subject_ID']
-                for i in range(num_original_features):
+                for i, feature_label in enumerate(feature_labels):
                     for stat in stats_config:
-                        header.append(f'Feature_{i+1}_{stat}')
+                        header.append(f'{feature_label}_{stat}')
                 writer.writerow(header)
                 
                 # Write data rows
@@ -225,15 +324,17 @@ def process_npy_to_csv_detailed(npy_file, output_csv, config=None):
         else:
             # Handle other data formats (fallback)
             num_original_features = 1
+            feature_labels = get_feature_labels(feature_set_name, num_original_features)
             feature_stats = calculate_statistics(data, stats_config)
             with open(output_csv, mode='w', newline='', encoding='utf-8') as csv_file:
                 writer = csv.writer(csv_file)
-                header = ['Subject_ID'] + [f'Feature_1_{stat}' for stat in stats_config]
+                header = ['Subject_ID'] + [f'{feature_labels[0]}_{stat}' for stat in stats_config]
                 writer.writerow(header)
                 row = ['Unknown'] + [feature_stats[stat] for stat in stats_config]
                 writer.writerow(row)
                 
         print(f"Successfully converted {npy_file} to {output_csv}")
+        print(f"  - Feature set: {feature_set_name}")
         print(f"  - Original features: {num_original_features}")
         print(f"  - Statistics per feature: {len(stats_config)}")
         print(f"  - Total columns: {max_features} + Subject_ID")
